@@ -1,0 +1,74 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Dosen {
+  id         Int         @id @default(autoincrement())
+  name       String
+  nidn       String      @unique
+  kelas      Kelas[]
+  jadwal     Jadwal[]
+  preferensi Preferensi[]
+}
+
+model Preferensi {
+  id      Int   @id @default(autoincrement())
+  dosenId Int
+  slotId  Int
+  skor    Int
+  dosen   Dosen     @relation(fields: [dosenId], references: [id], onDelete: Cascade)
+  slot    SlotWaktu @relation(fields: [slotId], references: [id], onDelete: Cascade)
+
+  @@unique([dosenId, slotId])
+}
+
+model Ruangan {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  kapasitas Int
+  fasilitas String?
+  jadwal    Jadwal[]
+}
+
+model SlotWaktu {
+  id         Int         @id @default(autoincrement())
+  hari       String
+  jamMulai   String
+  jamSelesai String
+  label      String
+  preferensi Preferensi[]
+  jadwal     Jadwal[]
+
+  @@unique([hari, jamMulai])
+}
+
+model Kelas {
+  id              Int      @id @default(autoincrement())
+  name            String
+  jumlahMahasiswa Int
+  dosenId         Int
+  slotPerMinggu   Int
+  dosen           Dosen    @relation(fields: [dosenId], references: [id], onDelete: Restrict)
+  jadwal          Jadwal[]
+}
+
+model Jadwal {
+  id        Int      @id @default(autoincrement())
+  kelasId   Int
+  dosenId   Int
+  ruanganId Int
+  slotId    Int
+  kelas     Kelas     @relation(fields: [kelasId], references: [id], onDelete: Cascade)
+  dosen     Dosen     @relation(fields: [dosenId], references: [id], onDelete: Cascade)
+  ruangan   Ruangan   @relation(fields: [ruanganId], references: [id], onDelete: Restrict)
+  slot      SlotWaktu @relation(fields: [slotId], references: [id], onDelete: Restrict)
+
+  @@unique([dosenId, slotId])
+  @@unique([ruanganId, slotId])
+  @@unique([kelasId, slotId])
+}
